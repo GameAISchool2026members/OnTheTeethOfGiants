@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-                                    
-public class ToothScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+
+public class ToothScript : MonoBehaviour
 {
     public Gradient toothColor;
 
@@ -30,23 +30,29 @@ public class ToothScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     public void Select()
     {
         Debug.Log("Selected tooth: " + gameObject.name);
-        GetComponent<Image>().color = Color.red;
+        GetComponent<SpriteRenderer>().color = Color.red;
     }
 
     public void UnSelect()
     {
         Debug.Log("Unselected tooth: " + gameObject.name);
-        GetComponent<Image>().color = toothColor.Evaluate(colorValue);
+        GetComponent<SpriteRenderer>().color = toothColor.Evaluate(colorValue);
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
+    void OnTriggerEnter2D(Collider2D other)
     {
-        Select();
+        if (other.gameObject.CompareTag("Player"))
+        {
+            Select();
+        }
     }
 
-    public void OnPointerExit(PointerEventData eventData) 
+    void OnTriggerExit2D(Collider2D other)
     {
-        UnSelect();
+        if (other.gameObject.CompareTag("Player"))
+        {
+            UnSelect();
+        }
     }
 
     // OLD VERSION
