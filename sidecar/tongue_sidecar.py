@@ -16,6 +16,9 @@ import mediapipe as mp
 from video_server import VideoServer
 from tongue_colour import TongueTracker, classify_direction
 from tongue_kalman import TongueKalman
+from tongue_dino import TongueDinoTracker as TongueTracker # remove this for non-DINO
+# tracker = TongueTracker()  # constructs the DINO version
+# ... bind 'e' -> tracker.enroll(frame, lms)
 
 MODEL_PATH  = "face_landmarker.task"
 CAM_INDEX   = 0
@@ -44,6 +47,7 @@ def main():
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     tracker = TongueTracker()
+
     kf = TongueKalman()                 # smooths (dx, dy); see tongue_kalman.py
     video = VideoServer(width=480, quality=60)
 
@@ -112,11 +116,14 @@ def main():
                 cv2.imshow("tongue tracker (sidecar)", display)
 
                 key = cv2.waitKey(1) & 0xFF
-                if key == 27:                                    # Esc
-                    break
+                if key == ord("e") and result.face_landmarks:  # enroll
+                    tracker.enroll(frame, result.face_landmarks[0])
                 elif key == ord("c") and result.face_landmarks:  # re-center
                     tracker.recenter(frame, result.face_landmarks[0])   # clean frame, not the overlay
                     kf.reset()                                   # avoid a lurch at the new zero
+                # close with esc key
+                elif key == 27:
+                    break
 
     video.close()
     sock.close()
