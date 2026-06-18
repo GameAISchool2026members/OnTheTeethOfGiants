@@ -1,9 +1,7 @@
+using JetBrains.Annotations;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
-using UnityEngine.Timeline;
-using UnityEngine.UI;
 
 public class ToothScript : MonoBehaviour
 {
@@ -12,19 +10,27 @@ public class ToothScript : MonoBehaviour
     [Range(0f, 1f)]
     public float colorValue = 0.0f;
 
+    [Range(0f, 10f)]
+    public int toothDecayTime = 5;
+    public int timeUntilDecayStarts = 2;
+
     public bool isWhite;
     public bool isYellow;
+    public bool isBlack;
+    public bool isGold;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public Material gold;
+
+    // NEW: Track if this specific tooth is actively in the process of rotting
+    private bool isDecaying = false;
+
+    Coroutine toothDecayRoutine;
+    List<ToothScript> neighborTeeth;
+
     void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        //EvaluateColor(colorValue);
+        neighborTeeth = FindNeighborsPhysics();
+        White();
     }
 
     public void EvaluateColor(float value)
@@ -33,71 +39,146 @@ public class ToothScript : MonoBehaviour
         GetComponent<SpriteRenderer>().color = toothColor.Evaluate(value);
     }
 
-    /*public void Select()
-    {
-        Debug.Log("Selected tooth: " + gameObject.name);
-        GetComponent<SpriteRenderer>().color = Color.red;
-    }
-
-    public void UnSelect()
-    {
-        Debug.Log("Unselected tooth: " + gameObject.name);
-        GetComponent<SpriteRenderer>().color = toothColor.Evaluate(colorValue);
-    }*/
-
     public void Clean()
     {
         if (isYellow)
         {
             Debug.Log("Cleaned tooth: " + gameObject.name);
-            EvaluateColor(0f);
             White();
-            TeethManager.onToothCleaned.Invoke();
+            // Assuming TeethManager handles this event statically
+            TeethManager.onToothCleaned.Invoke(); 
         }
+    }
+
+    public void LootBox()
+    {
+        Debug.Log("Lets goooo");
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.gameObject.CompareTag("Player"))
         {
-            Clean();
+            if (isYellow)
+            {
+                Clean();
+            }
+            else if (isBlack || isDecaying)
+            {
+                StopToothDecay();
+            }
+            else if (isGold)
+            {
+                LootBox();
+            }
         }
     }
 
-    /*void OnTriggerExit2D(Collider2D other)
-    {
-        if (other.gameObject.CompareTag("Player"))
-        {
-            UnSelect();
-        }
-    }*/
-
     public void Yellow()
     {
+        EvaluateColor(1f);
         isYellow = true;
         isWhite = false;
+        isBlack = false;
     }
 
     public void White()
     {
+        EvaluateColor(0f);
         isWhite = true;
         isYellow = false;
+        isBlack = false;
+        isDecaying = false;
     }
 
-    // OLD VERSION
-    /*private void OnCollisionEnter2D(Collision2D collision)
+    public void Black()
     {
-        if (collision.gameObject == GameObject.FindGameObjectWithTag("Player"))
+        isBlack = true;
+        isYellow = false;
+        isWhite = false;
+        isDecaying = false;
+        GetComponent<SpriteRenderer>().color = Color.black;
+
+        foreach (var n in neighborTeeth)
         {
-            Select();
+            if (!n.isBlack && !n.isDecaying)
+            {
+                n.StartDecay();
+            }
         }
     }
 
-    private void OnCollisionExit2D(Collision2D collision)
+    public void Gold()
     {
-        if (collision.gameObject == GameObject.FindGameObjectWithTag("Player"))
+        isBlack = false;
+        isYellow = false;
+        isWhite = false;
+        GetComponent<SpriteRenderer>().material = gold;
+    }
+
+    public void StartDecay()
+    {
+        if (toothDecayRoutine != null)
         {
-            UnSelect();
+            StopCoroutine(toothDecayRoutine);
         }
-    }*/
+
+        isDecaying = true;
+        toothDecayRoutine = StartCoroutine(BlackToothDecay());
+    }
+
+    public IEnumerator BlackToothDecay()
+    {
+        yield return new WaitForSeconds(timeUntilDecayStarts);
+
+        float elapsedTime = 0;
+        while (elapsedTime < toothDecayTime)
+        {
+            elapsedTime += Time.deltaTime;
+            float t = elapsedTime / toothDecayTime;
+
+            GetComponent<SpriteRenderer>().color = Color.Lerp(Color.white, Color.black, t);
+            yield return null;
+        }
+
+        Black();
+    }
+
+    public void StopToothDecay()
+    {
+        if (toothDecayRoutine != null)
+        {
+            StopCoroutine(toothDecayRoutine);
+            toothDecayRoutine = null;
+        }
+
+        White();
+
+        foreach (var n in neighborTeeth)
+        {
+            if (n.isDecaying)
+            {
+                n.StopToothDecay();
+            }
+        }
+    }
+
+    public List<ToothScript> FindNeighborsPhysics()
+    {
+        List<ToothScript> foundNeighbors = new List<ToothScript>();
+        float checkRadius = 7.5f; // After testing this number is just right
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, checkRadius);
+
+        foreach (var col in colliders)
+        {
+            if (col.gameObject == this.gameObject) continue;
+
+            ToothScript neighbor = col.GetComponent<ToothScript>();
+            if (neighbor != null)
+            {
+                foundNeighbors.Add(neighbor);
+            }
+        }
+        return foundNeighbors;
+    }
 }
