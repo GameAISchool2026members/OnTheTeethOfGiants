@@ -39,5 +39,19 @@ public class ToothScript : MonoBehaviour
         GetComponent<Image>().color = toothColor.Evaluate(colorValue);
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject == GameObject.FindGameObjectWithTag("Player"))
+        {
+            Select();
+        }
+    }
 
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject == GameObject.FindGameObjectWithTag("Player"))
+        {
+            UnSelect();
+        }
+    }
 }
