@@ -23,6 +23,7 @@ Run:
 
 import time
 import cv2
+import numpy as np
 import mediapipe as mp
 from tongue_dino import TongueDinoTracker, classify_direction
 
@@ -85,28 +86,31 @@ def main():
                 m = tracker.measure(frame, lms)
                 t_infer = (time.perf_counter() - t_start) * 1000
 
-                dx, dy, conf, tmask = m
-                direction = classify_direction(dx, dy, conf)
+                if m is not None:
+                    dx, dy, conf, tmask = m
+                    direction = classify_direction(dx, dy, conf)
 
-                # Morphological operations to expand and smooth the mask
-                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
-                tmask_morph = cv2.morphologyEx(tmask.astype(np.uint8), cv2.MORPH_CLOSE, kernel)
-                tmask_morph = cv2.morphologyEx(tmask_morph, cv2.MORPH_OPEN, kernel)
+                    # Morphological operations to expand and smooth the mask
+                    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+                    tmask_morph = cv2.morphologyEx(tmask.astype(np.uint8),
+                                                   cv2.MORPH_CLOSE, kernel)
+                    tmask_morph = cv2.morphologyEx(tmask_morph,
+                                                   cv2.MORPH_OPEN, kernel)
 
-                # Edge detection for better boundary marking
-                edges = cv2.Canny(tmask_morph, 100, 200)     # first threshold edge linking, second does edge detection
+                    # Edge detection for cleaner boundary marking
+                    edges = cv2.Canny(tmask_morph, 100, 200)
 
-                # Overlay mask and edges
-                green = frame.copy()
-                green[tmask_morph > 0] = (0, 255, 0)
-                frame = cv2.addWeighted(green, 0.4, frame, 0.6, 0)
-                frame[edges > 0] = (0, 0, 255)  # Red edges
+                    # Overlay mask and edges
+                    green = frame.copy()
+                    green[tmask_morph > 0] = (0, 255, 0)
+                    frame = cv2.addWeighted(green, 0.4, frame, 0.6, 0)
+                    frame[edges > 0] = (0, 0, 255)         # red edges
 
-                cv2.putText(frame,
-                            f"{direction}  dx={dx:+.2f} dy={dy:+.2f} "
-                            f"conf={conf:.2f}  {t_infer:.0f}ms",
-                            (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
-                            (0, 255, 0), 2)
+                    cv2.putText(frame,
+                                f"{direction}  dx={dx:+.2f} dy={dy:+.2f} "
+                                f"conf={conf:.2f}  {t_infer:.0f}ms",
+                                (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                                (0, 255, 0), 2)
                 else:
                     msg = "no tongue" if tracker._t_n else "press 'e' (tongue out) to enroll"
                     cv2.putText(frame, msg, (10, 30),
