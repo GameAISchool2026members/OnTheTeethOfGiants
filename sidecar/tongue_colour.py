@@ -35,7 +35,7 @@ NOSE_BOTTOM = [2, 98, 327]
 
 
 class TongueTracker:
-    def __init__(self, a_thresh=150, min_area=150, v_gain=2.0):
+    def __init__(self, a_thresh=150, min_area=130, v_gain=2.0):
         self.a_thresh = a_thresh     # FIXED redness cutoff; hand-tune if lighting changes
         self.min_area = min_area     # min blob pixels to count as "tongue out"
         self.v_gain = float(v_gain)  # how hard crossing a lip pushes up/down
