@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
                                     
-public class ToothScript : MonoBehaviour
+public class ToothScript : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     public Gradient toothColor;
 
@@ -39,7 +39,18 @@ public class ToothScript : MonoBehaviour
         GetComponent<Image>().color = toothColor.Evaluate(colorValue);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        Select();
+    }
+
+    public void OnPointerExit(PointerEventData eventData) 
+    {
+        UnSelect();
+    }
+
+    // OLD VERSION
+    /*private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject == GameObject.FindGameObjectWithTag("Player"))
         {
@@ -53,5 +64,5 @@ public class ToothScript : MonoBehaviour
         {
             UnSelect();
         }
-    }
+    }*/
 }
