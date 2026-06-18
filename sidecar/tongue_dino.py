@@ -81,13 +81,18 @@ class DinoFeatures:
 
 
 class TongueDinoTracker:
-    def __init__(self, features=None, margin=0.04, min_area=150,
-                 model_name="dinov2_vits14_reg", grid=8, threads=None):
+    def __init__(self, features=None, margin=0.35, min_area=150,
+                 model_name="dinov2_vits14_reg", grid=8, threads=None,
+                 reach=(0.6, 0.35, 1.3)):
         self.fx = features or DinoFeatures(model_name=model_name,
                                            grid=grid, threads=threads)
         self.grid = self.fx.grid
         self.margin = margin            # cos(tongue) - cos(bg) needed to fire
         self.min_area = min_area
+        # How far past the mouth box the tongue may reach, as fractions of mouth
+        # width/height: (sideways, up, down). The envelope both crops what DINO
+        # sees and gates the final mask, so a side/down tongue must fit inside it.
+        self.reach_x, self.reach_up, self.reach_dn = reach
         self.ox = self.oy = 0.0
         self._k = np.ones((3, 3), np.uint8)
         # prototype accumulators (sums + counts -> running means)
@@ -115,25 +120,29 @@ class TongueDinoTracker:
         lip_cut = cv2.dilate(lip_band, self._k, iterations=3)
 
         x, y, bw, bh = cv2.boundingRect(outer)
-        ext = np.array([
-            [x - int(0.10 * bw), y + bh - int(0.10 * bh)],
-            [x + bw + int(0.10 * bw), y + bh - int(0.10 * bh)],
-            [x + bw + int(0.10 * bw), y + bh + int(0.70 * bh)],
-            [x - int(0.10 * bw), y + bh + int(0.70 * bh)],
-        ], dtype=np.int32)
+        # Generous envelope around the mouth: the tongue may protrude in any
+        # direction (mostly down). This both bounds the DINO crop and gates the
+        # final mask, so it must contain a fully-extended tongue.
+        mx = int(self.reach_x * bw)
+        up = int(self.reach_up * bh)
+        dn = int(self.reach_dn * bh)
+        ex0, ey0 = x - mx, y - up
+        ex1, ey1 = x + bw + mx, y + bh + dn
+        env = np.array([[ex0, ey0], [ex1, ey0], [ex1, ey1], [ex0, ey1]],
+                       dtype=np.int32)
 
-        search = opening.copy()
-        cv2.fillPoly(search, [ext], 255)
-        search = cv2.bitwise_and(search, cv2.bitwise_not(lip_cut))
+        # Search region = the envelope. NOTE: we deliberately do NOT subtract the
+        # lip band here (unlike the colour tracker). A side/down tongue lies on
+        # top of the lip, so cutting the lips out would clip it; the tongue-vs-bg
+        # prototype score is what keeps lips/skin from firing.
+        search = np.zeros((h, w), np.uint8)
+        cv2.fillPoly(search, [env], 255)
 
         cx, cy = inner.mean(0)
-        box = cv2.boundingRect(np.vstack([outer, ext]))     # x, y, w, h
-        bx, by, bwid, bhei = box
-        pad = int(0.08 * max(bwid, bhei))
-        x0 = max(0, bx - pad)
-        y0 = max(0, by - pad)
-        x1 = min(w, bx + bwid + pad)
-        y1 = min(h, by + bhei + pad)
+        x0 = max(0, ex0)
+        y0 = max(0, ey0)
+        x1 = min(w, ex1)
+        y1 = min(h, ey1)
         return {
             "opening": opening, "lip_cut": lip_cut, "outer_mask": outer_mask,
             "search": search, "box": (x0, y0, x1, y1),
