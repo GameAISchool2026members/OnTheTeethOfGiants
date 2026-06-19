@@ -23,7 +23,7 @@ import socket
 import cv2
 import mediapipe as mp
 from video_server import VideoServer
-from tongue_colour import TongueTracker as _ColourTracker, classify_direction
+from tongue_colour import TongueTracker as _ColourTracker, classify_direction, mouth_crop
 from tongue_dino import TongueDinoTracker as _DinoTracker
 
 # ── Swap tracker backend here ──────────────────────────────────────────────────
@@ -31,6 +31,12 @@ TRACKER = "dino"   # "colour"  →  redness threshold (fast, CPU, no extra deps)
                    # "dino"    →  DINOv2 feature tracker (more robust)
 # ──────────────────────────────────────────────────────────────────────────────
 TongueTracker = {"colour": _ColourTracker, "dino": _DinoTracker}[TRACKER]
+
+# ── Swap what gets streamed to the dino game ───────────────────────────────────
+CROP = "face"     # "mouth" →  just the mouth region (tight; easiest for dino)
+                   # "face"  →  padded head/face crop (respects REMOVE_BACKGROUND)
+                   # "full"  →  whole mirrored frame
+# ──────────────────────────────────────────────────────────────────────────────
 
 MODEL_PATH        = "face_landmarker.task"
 SEG_MODEL_PATH    = "selfie_multiclass_256x256.tflite"
@@ -40,6 +46,7 @@ UNITY_PORT        = 5005
 SHOW_WINDOW       = True            # annotated webcam frame
 SHOW_STREAM       = True            # what Unity actually receives
 FACE_PAD          = 0.25            # padding around face crop (fraction of box)
+MOUTH_PAD         = 0.15            # sideways padding around mouth crop
 REMOVE_BACKGROUND = False           # OFF: heavy on CPU. True keeps only the head.
 BG_COLOR          = (0, 0, 0)       # BGR fill for removed background (if enabled)
 
@@ -84,6 +91,22 @@ def crop_face(frame, lms, pad: float = FACE_PAD):
     return frame[py0:py1, px0:px1]
 
 
+def stream_crop(frame, result, segmenter):
+    """Pick what to send to the dino game based on CROP. Falls back to the full
+    frame whenever no face is detected (so Unity never sees a stale image)."""
+    if not result.face_landmarks:
+        return frame
+    lms0 = result.face_landmarks[0]
+    if CROP == "mouth":
+        return mouth_crop(frame, lms0, pad=MOUTH_PAD)
+    if CROP == "face":
+        out = crop_face(frame, lms0)
+        if segmenter is not None:
+            out = segmenter.apply(out, bg_color=BG_COLOR)
+        return out
+    return frame                                    # "full"
+
+
 def main():
     cap = cv2.VideoCapture(CAM_INDEX)
     if not cap.isOpened():
@@ -96,11 +119,14 @@ def main():
     last_ts = -1
     video = VideoServer(width=480, quality=60)
 
-    # Only loaded if explicitly enabled — keeps the default path light.
+    # Background removal only makes sense on the face crop; skip it for mouth/full.
     segmenter = None
-    if REMOVE_BACKGROUND:
+    if REMOVE_BACKGROUND and CROP == "face":
         from head_segment import HeadSegmenter
         segmenter = HeadSegmenter(model_path=SEG_MODEL_PATH)
+    elif REMOVE_BACKGROUND:
+        print(f"REMOVE_BACKGROUND ignored: only applies when CROP == 'face' "
+              f"(CROP is '{CROP}').")
 
     with FaceLandmarker.create_from_options(options) as landmarker:
         t0 = time.perf_counter()
@@ -133,16 +159,9 @@ def main():
             sock.sendto(f"{dx:.4f},{dy:.4f},{conf:.4f}".encode("ascii"),
                         (UNITY_HOST, UNITY_PORT))
 
-            # ---- TCP video: stream face crop only ----
-            face_frame = (
-                crop_face(frame, result.face_landmarks[0])
-                if result.face_landmarks
-                else frame
-            )
-            if segmenter is not None and result.face_landmarks:
-                face_frame = segmenter.apply(face_frame, bg_color=BG_COLOR)
-
-            video.send(face_frame)
+            # ---- TCP video: stream the chosen crop (mouth by default) ----
+            stream_frame = stream_crop(frame, result, segmenter)
+            video.send(stream_frame)
 
             # ---- debug window 1: full annotated frame ----
             if SHOW_WINDOW:
@@ -160,14 +179,14 @@ def main():
 
             # ---- debug window 2: exactly what Unity receives ----
             if SHOW_STREAM:
-                streamed = video.frame_for_stream(face_frame)   # resized + JPEG round-trip
+                streamed = video.frame_for_stream(stream_frame)   # resized + JPEG round-trip
                 up = video.connected
                 status = "Unity: connected" if up else "Unity: waiting..."
                 colour = (0, 255, 0) if up else (0, 165, 255)
                 h2, w2 = streamed.shape[:2]
                 cv2.putText(streamed, status, (8, 20),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.55, colour, 2)
-                cv2.putText(streamed, f"{w2}x{h2}  q{video.quality}", (8, h2 - 10),
+                cv2.putText(streamed, f"{w2}x{h2}  q{video.quality}  [{CROP}]", (8, h2 - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (200, 200, 200), 1)
                 cv2.imshow("stream -> unity", streamed)
 
