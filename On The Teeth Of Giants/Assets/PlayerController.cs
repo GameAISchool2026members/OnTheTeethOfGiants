@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using Unity.Burst;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -10,11 +12,14 @@ public class PlayerController : MonoBehaviour
     Rigidbody2D rb;
 
     [SerializeField]
-    float moveSpeed = 10f;
+    public float moveSpeed = 10f;
+
+    float startMoveSpeed;
+    
 
     void Start()
     {
-        
+        startMoveSpeed = moveSpeed;
     }
 
     private void FixedUpdate()
@@ -50,5 +55,10 @@ public class PlayerController : MonoBehaviour
         Vector3 tempVect = new Vector3(h, v, 0);
         tempVect = tempVect.normalized * moveSpeed * Time.deltaTime;
         rb.MovePosition(rb.transform.position + tempVect);
+    }
+
+    public void ResetSpeed()
+    {
+        moveSpeed = startMoveSpeed;
     }
 }
