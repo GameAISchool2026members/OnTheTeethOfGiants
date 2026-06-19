@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class ToothScript : MonoBehaviour
@@ -25,7 +26,10 @@ public class ToothScript : MonoBehaviour
     public bool isOverdrive;
     public Sprite OverdriveTooth;
 
-    public Material gold;
+    public bool isPortal;
+    public Sprite PortalTooth;
+
+    List<GameObject> teeth;
 
     // NEW: Track if this specific tooth is actively in the process of rotting
     private bool isDecaying = false;
@@ -33,10 +37,13 @@ public class ToothScript : MonoBehaviour
     Coroutine toothDecayRoutine;
     List<ToothScript> neighborTeeth;
 
+    TeethManager TeethManager;
+
     void Start()
     {
         neighborTeeth = FindNeighborsPhysics();
         White();
+        TeethManager = GameObject.FindGameObjectWithTag("TeethManager").GetComponent<TeethManager>();
     }
 
     public void EvaluateColor(float value)
@@ -80,11 +87,18 @@ public class ToothScript : MonoBehaviour
             }
             else if (isGold)
             {
-                Gold();
+                LootBox();
             }
             else if (isOverdrive)
             {
-                Overdrive();
+                TeethManager.EnableOverdrive(); 
+            }
+            else if (isPortal)
+            {
+               if (isPortal)
+                {
+                    DoPortalThing(other.gameObject);
+                }
             }
         }
     }
@@ -144,9 +158,29 @@ public class ToothScript : MonoBehaviour
         isBlack = false;
         isDecaying = false;
         GetComponent<SpriteRenderer>().sprite = OverdriveTooth;
-
     }
 
+    public void Portal()
+    {
+        isPortal = true;
+        isOverdrive = false;
+        isWhite = false;
+        isYellow = false;
+        isBlack = false;
+        isDecaying = false;
+        GetComponent<SpriteRenderer>().sprite = PortalTooth;
+    }
+
+    public void DoPortalThing(GameObject enteredTooth)
+    {
+        GameObject OtherTooth = TeethManager.currentPortalTeeth.FirstOrDefault(x => x != enteredTooth);
+        foreach(var t in TeethManager.currentPortalTeeth)
+        {
+            t.GetComponent<ToothScript>().White();
+        }
+        TeethManager.currentPortalTeeth.Clear();
+        GameObject.FindWithTag("Player").transform.position = OtherTooth.transform.position;  
+    }
 
 
     public void StartDecay()

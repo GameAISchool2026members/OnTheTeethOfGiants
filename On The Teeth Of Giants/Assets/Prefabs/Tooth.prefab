@@ -149,7 +149,10 @@ MonoBehaviour:
   GoldTooth: {fileID: 21300000, guid: 59d47c988361cbf429e335971517df77, type: 3}
   isOverdrive: 0
   OverdriveTooth: {fileID: 21300000, guid: 6b3c641cd2a3386409dae1d1c20f9b20, type: 3}
+  isPortal: 0
+  PortalTooth: {fileID: 21300000, guid: 8cbc7ebbe3193664485bac1a9f3359f6, type: 3}
   gold: {fileID: 2100000, guid: e05ca6eee40ed9044815fc352dd2b2e6, type: 2}
+  TeethManager: {fileID: 0}
 --- !u!61 &7269518237445050565
 BoxCollider2D:
   m_ObjectHideFlags: 0

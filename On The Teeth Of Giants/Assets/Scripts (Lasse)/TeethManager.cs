@@ -1,3 +1,4 @@
+using NUnit.Framework.Interfaces;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,9 +21,13 @@ public class TeethManager : MonoBehaviour
 
     [Range(0f, 1f)]
     public float goldenTeethProbability = 0.1f;
-    public float overdriveTeethProbaility = 0.1f;
+    [Range(0f, 1f)]
+    public float overdriveTeethProbability = 0.1f;
+    [Range(0f, 1f)]
+    public float portalTeethProbability = 0.05f;
 
-    [SerializeField] float overdriveMultiplier;
+    [SerializeField] float overdriveMultiplier = 2f;
+    [SerializeField] float overdriveDuration = 5f;
 
 
     [Header("Overdrive Settings")]
@@ -34,6 +39,8 @@ public class TeethManager : MonoBehaviour
     public GameObject beam1;
     public GameObject beam2;
 
+    public List<GameObject> currentPortalTeeth = new List<GameObject>();
+
     void Start()
     {
         teeth = new List<GameObject>(GameObject.FindGameObjectsWithTag("Tooth"));
@@ -44,6 +51,9 @@ public class TeethManager : MonoBehaviour
         onToothCleaned.AddListener(OnCleaned);
 
         StartCoroutine(RottenTeeth());
+        StartCoroutine(GoldTeeth());
+        StartCoroutine(PortalTeeth());
+        StartCoroutine(OverdriveTeeth());
     }
 
     void OnDestroy()
@@ -78,21 +88,13 @@ public class TeethManager : MonoBehaviour
         {
             yield return new WaitForSeconds(timeToRotten);
 
-            List<GameObject> validTeeth = teeth.Where(t => {ToothScript script = t.GetComponent<ToothScript>(); return script != null && !script.isBlack; }).ToList();
+            List<GameObject> validTeeth = teeth.Where(t => {ToothScript script = t.GetComponent<ToothScript>(); return script != null && script.isWhite; }).ToList();
 
             if (validTeeth.Count > 0)
             {
                 int randomIndex = Random.Range(0, validTeeth.Count);
                 ToothScript targetTooth = validTeeth[randomIndex].GetComponent<ToothScript>();
-                if (GoldTooth())
-                {
-                    targetTooth.Gold();
-                }
 
-                if (OverdriveTooth())
-                {
-                    targetTooth.Overdrive();
-                }
                 targetTooth.Black();
             }
             else
@@ -101,6 +103,115 @@ public class TeethManager : MonoBehaviour
             }
         }
     }
+
+    public IEnumerator OverdriveTeeth()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(timeToRotten);
+
+            List<GameObject> validTeeth = teeth.Where(t => { ToothScript script = t.GetComponent<ToothScript>(); return script != null && script.isWhite; }).ToList();
+
+            if (validTeeth.Count > 0)
+            {
+                int randomIndex = Random.Range(0, validTeeth.Count);
+                ToothScript targetTooth = validTeeth[randomIndex].GetComponent<ToothScript>();
+
+                if (OverdriveTooth())
+                {
+                    targetTooth.Overdrive();
+                }
+            }
+            else
+            {
+                Debug.Log("All teeth are black");
+            }
+        }
+    }
+
+    public IEnumerator PortalTeeth()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(timeToRotten);
+
+            List<GameObject> validTeeth = teeth.Where(t => { ToothScript script = t.GetComponent<ToothScript>(); return script != null && script.isWhite; }).ToList();
+
+            if (validTeeth.Count > 0)
+            {
+                if (currentPortalTeeth.Count == 0)
+                {
+                    List<GameObject> portalTeeth = PortalSetup();
+                    currentPortalTeeth = portalTeeth;
+
+                    if (PortalTooth())
+                    {
+                        foreach (var tooth in portalTeeth)
+                        {
+                            tooth.GetComponent<ToothScript>().Portal();
+                        }
+                    }
+                }
+                //int randomIndex = Random.Range(0, validTeeth.Count);
+                //ToothScript targetTooth = validTeeth[randomIndex].GetComponent<ToothScript>(); 
+            }
+            else
+            {
+                Debug.Log("All teeth are black");
+            }
+        }
+    }
+
+    public IEnumerator GoldTeeth()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(timeToRotten);
+
+            List<GameObject> validTeeth = teeth.Where(t => { ToothScript script = t.GetComponent<ToothScript>(); return script != null && script.isWhite; }).ToList();
+
+            if (validTeeth.Count > 0)
+            {
+                int randomIndex = Random.Range(0, validTeeth.Count);
+                ToothScript targetTooth = validTeeth[randomIndex].GetComponent<ToothScript>();
+
+                if (GoldTooth())
+                {
+                    targetTooth.Gold();
+                }
+            }
+            else
+            {
+                Debug.Log("All teeth are black");
+            }
+        }
+    }
+    public List<GameObject> PortalSetup()
+    {
+        int randomIndex;
+        do
+        {
+            randomIndex = Random.Range(0, teeth.Count);
+        }
+        while (!teeth[randomIndex].GetComponent<ToothScript>().isWhite);
+        GameObject firstTooth = teeth[randomIndex];
+        int randomIndex2 = Random.Range(0, teeth.Count);
+        do
+        {
+            randomIndex2 = Random.Range(0, teeth.Count);
+        }
+        while (!teeth[randomIndex2].GetComponent<ToothScript>().isWhite && !(firstTooth));
+        GameObject secondTooth = teeth[randomIndex2];
+
+        return new List<GameObject>()
+        {
+            firstTooth,
+            secondTooth
+        };
+
+    }
+
+   
 
     public bool GoldTooth()
     {
@@ -116,12 +227,22 @@ public class TeethManager : MonoBehaviour
     public bool OverdriveTooth()
     {
         int randomNumber = Random.Range(0, 1);
-        if (randomNumber < goldenTeethProbability)
+        if (randomNumber < overdriveTeethProbability)
         {
             return true;
         }
         return false;
     }
+    public bool PortalTooth()
+    {
+        int randomNumber = Random.Range(0, 1);
+        if (randomNumber < portalTeethProbability)
+        {
+            return true;
+        }
+        return false;
+    }
+
 
     public void OnCleaned()
     {
@@ -141,16 +262,14 @@ public class TeethManager : MonoBehaviour
         beam1.SetActive(true);
         beam2.SetActive(true);
         overdriveActive = true;
+        player.moveSpeed *= overdriveMultiplier;
         StartCoroutine(Overdrive());
-
     }
 
     public IEnumerator Overdrive()
     {
-        player.moveSpeed *= overdriveMultiplier;
-        yield return null;
-
-
+        yield return new WaitForSeconds(overdriveDuration);
+        DisableOverdrive();
     }
 
     public void DisableOverdrive()

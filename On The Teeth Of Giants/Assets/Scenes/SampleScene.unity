@@ -4714,7 +4714,7 @@ GameObject:
   - component: {fileID: 1460947512}
   m_Layer: 0
   m_Name: TeethManager
-  m_TagString: Untagged
+  m_TagString: TeethManager
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4733,13 +4733,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TeethManager
   teethOccurenceRate: 0.2
   timeToRotten: 10
-  goldenTeethProbability: 0.1
-  overdriveTeethProbaility: 0.1
-  overdriveMultiplier: 0
+  goldenTeethProbability: 0.06
+  overdriveTeethProbability: 0.78
+  portalTeethProbability: 0.05
+  overdriveMultiplier: 2
+  overdriveDuration: 5
   overdriveActive: 0
   overdriveScreen: {fileID: 1949200941}
   beam1: {fileID: 472947818}
   beam2: {fileID: 1789000591}
+  currentPortalTeeth: []
 --- !u!4 &1460947513
 Transform:
   m_ObjectHideFlags: 0
