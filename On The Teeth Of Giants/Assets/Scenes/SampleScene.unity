@@ -4437,11 +4437,6 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
---- !u!212 &1284446917 stripped
-SpriteRenderer:
-  m_CorrespondingSourceObject: {fileID: 2836433083759291286, guid: 17ffb2f69e388f8458d1fff76086123c, type: 3}
-  m_PrefabInstance: {fileID: 911334469}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1285141043
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5361,13 +5356,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a80c0aa539aa93949a2b3c2d84258bac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TeethManager
-  teethOccurenceRate: 0.2
-  timeToRotten: 7
-  timeToDisco: 15
-  timeToPortal: 14
+  teethOccurenceRate: 0.7
+  timeToRotten: 4
+  timeToDisco: 5
+  timeToPortal: 10
   goldenTeethProbability: 0.06
-  overdriveTeethProbability: 0.78
-  portalTeethProbability: 0.05
+  overdriveTeethProbability: 0.35
+  portalTeethProbability: 0.8
   overdriveMultiplier: 2
   overdriveDuration: 5
   overdriveActive: 0
@@ -5375,8 +5370,8 @@ MonoBehaviour:
   beam1: {fileID: 472947818}
   beam2: {fileID: 1789000591}
   currentPortalTeeth: []
-  audioPlayer: {fileID: 1460947514}
-  clip1: {fileID: 8300000, guid: bea502d3a5e6d4a58b00b9bea713756c, type: 3}
+  audioPlayer: {fileID: 0}
+  clip1: {fileID: 0}
 --- !u!4 &1460947513
 Transform:
   m_ObjectHideFlags: 0
@@ -7360,7 +7355,7 @@ MonoBehaviour:
   host: 127.0.0.1
   port: 5006
   target: {fileID: 1237549556}
-  target2: {fileID: 1284446917}
+  target2: {fileID: 0}
   number1: 1
   number2: 1
   number3: 1

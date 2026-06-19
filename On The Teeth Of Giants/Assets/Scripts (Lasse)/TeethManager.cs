@@ -211,6 +211,8 @@ public class TeethManager : MonoBehaviour
         while (!teeth[randomIndex2].GetComponent<ToothScript>().isWhite && !(firstTooth));
         GameObject secondTooth = teeth[randomIndex2];
 
+        Debug.Log("firstTooth pos" + firstTooth.transform.position);
+        Debug.Log("SecondTooth pos" + secondTooth.transform.position);
         return new List<GameObject>()
         {
             firstTooth,
@@ -255,7 +257,7 @@ public class TeethManager : MonoBehaviour
         audioPlayer.PlayOneShot(clip1);
         Debug.Log("Playing audio");
 
-        if (teeth.Any(x => {ToothScript script = x.GetComponent<ToothScript>(); return script != null && script.isYellow;}))
+        if (teeth.Any(x => {ToothScript script = x.GetComponent<ToothScript>(); return script != null && !script.isWhite;}))
         {
             Debug.Log("Not all teeth are clean yet.");
             return;
@@ -289,7 +291,7 @@ public class TeethManager : MonoBehaviour
         beam2.SetActive(false);
         overdriveActive = false;
         player.ResetSpeed();
-        StopAllCoroutines();
+        StopCoroutine(Overdrive());
     }
 
 

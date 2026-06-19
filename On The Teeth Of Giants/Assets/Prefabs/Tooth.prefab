@@ -137,9 +137,9 @@ MonoBehaviour:
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
   colorValue: 0
-  toothDecayTime: 5
+  toothDecayTime: 3
   timeUntilDecayStarts: 2
-  isWhite: 0
+  isWhite: 1
   WhiteTooth: {fileID: 21300000, guid: f3185dcdf04a0264fb6f5682a40c16f0, type: 3}
   isYellow: 0
   YellowTooth: {fileID: 21300000, guid: 56152a49bae7fd947a9f9a12619ac553, type: 3}

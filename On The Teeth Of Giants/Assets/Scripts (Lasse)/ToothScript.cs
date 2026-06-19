@@ -85,6 +85,7 @@ public class ToothScript : MonoBehaviour
             else if (isBlack || isDecaying)
             {
                 StopToothDecay();
+                White();
             }
             else if (isGold)
             {
@@ -98,10 +99,7 @@ public class ToothScript : MonoBehaviour
             }
             else if (isPortal)
             {
-               if (isPortal)
-                {
-                    DoPortalThing(other.gameObject);
-                }
+                DoPortalThing(other.gameObject);
             }
         }
     }
@@ -191,13 +189,25 @@ public class ToothScript : MonoBehaviour
 
     public void DoPortalThing(GameObject enteredTooth)
     {
-        GameObject OtherTooth = TeethManager.currentPortalTeeth.FirstOrDefault(x => x != enteredTooth);
+        Debug.Log("Tooth1" + enteredTooth.transform.position);
+        Debug.Log("Doing Portal Thing");
+        //GameObject OtherTooth = TeethManager.currentPortalTeeth.Where<GameObject>(x => x.gameObject != enteredTooth);
+        GameObject OtherTooth = null;
+        foreach(GameObject tooth in TeethManager.currentPortalTeeth)
+        {
+            if (tooth != enteredTooth)
+            {
+                OtherTooth = tooth;
+                Debug.Log("Tooth2" + OtherTooth.transform.position);
+            }
+
+        }
         foreach(var t in TeethManager.currentPortalTeeth)
         {
             t.GetComponent<ToothScript>().White();
         }
-        TeethManager.currentPortalTeeth.Clear();
-        GameObject.FindWithTag("Player").transform.position = OtherTooth.transform.position;  
+        GameObject.FindWithTag("Player").transform.position = OtherTooth.transform.position;
+        TeethManager.currentPortalTeeth.Clear(); 
     }
 
 
