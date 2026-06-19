@@ -67,7 +67,7 @@ public class MainMenuBtnScript : MonoBehaviour
         while (elapsedTime < 2f)
         {
             elapsedTime += Time.deltaTime;
-            float t = 2f / elapsedTime;
+            float t = elapsedTime / 2f;
             float scale = Mathf.Lerp(1, 2, t);
             transform.localScale = initSize * scale;
             yield return null;
