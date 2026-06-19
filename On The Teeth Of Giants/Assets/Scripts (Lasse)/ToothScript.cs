@@ -111,6 +111,9 @@ public class ToothScript : MonoBehaviour
         isYellow = true;
         isWhite = false;
         isBlack = false;
+        isOverdrive = false;
+        isPortal = false;
+        isGold = false;
         GetComponent<SpriteRenderer>().sprite = YellowTooth;
     }
 
@@ -122,6 +125,9 @@ public class ToothScript : MonoBehaviour
         isYellow = false;
         isBlack = false;
         isDecaying = false;
+        isOverdrive = false;
+        isPortal = false;
+        isGold = false;
         GetComponent<SpriteRenderer>().sprite = WhiteTooth;
 
     }
@@ -132,6 +138,9 @@ public class ToothScript : MonoBehaviour
         isYellow = false;
         isWhite = false;
         isDecaying = false;
+        isOverdrive = false;
+        isPortal = false;
+        isGold = false;
         //GetComponent<SpriteRenderer>().color = Color.black;
         GetComponent<SpriteRenderer>().sprite = BlackTooth;
 
@@ -146,9 +155,12 @@ public class ToothScript : MonoBehaviour
 
     public void Gold()
     {
+        isGold = true;
         isBlack = false;
         isYellow = false;
         isWhite = false;
+        isPortal = false;
+        isOverdrive = false;
         GetComponent<SpriteRenderer>().sprite = GoldTooth;
     }
 
@@ -159,6 +171,8 @@ public class ToothScript : MonoBehaviour
         isYellow = false;
         isBlack = false;
         isDecaying = false;
+        isGold = false;
+        isPortal = false;
         GetComponent<SpriteRenderer>().sprite = OverdriveTooth;
     }
 
@@ -170,6 +184,7 @@ public class ToothScript : MonoBehaviour
         isYellow = false;
         isBlack = false;
         isDecaying = false;
+        isGold = false;
         GetComponent<SpriteRenderer>().sprite = PortalTooth;
     }
 
@@ -209,12 +224,14 @@ public class ToothScript : MonoBehaviour
             GetComponent<SpriteRenderer>().color = Color.Lerp(Color.white, Color.black, t);
             yield return null;
         }
-
+        GetComponent<SpriteRenderer>().color = Color.white;
+        GetComponent<SpriteRenderer>().sprite = BlackTooth;
         Black();
     }
 
     public void StopToothDecay()
     {
+        Debug.Log("Stopping Tooth Decay");
         if (toothDecayRoutine != null)
         {
             StopCoroutine(toothDecayRoutine);

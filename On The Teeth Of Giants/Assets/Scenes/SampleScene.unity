@@ -2036,8 +2036,8 @@ Transform:
   m_GameObject: {fileID: 556753900}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.6702, y: 58.8, z: 90}
-  m_LocalScale: {x: 298.05, y: 1, z: 1}
+  m_LocalPosition: {x: 8.6702, y: 81.4, z: 90}
+  m_LocalScale: {x: 298.05, y: 50, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -2602,8 +2602,8 @@ Transform:
   m_GameObject: {fileID: 656789517}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 102.8, y: -55.5, z: 90}
-  m_LocalScale: {x: 298.05, y: 1, z: 1}
+  m_LocalPosition: {x: 122.8, y: -55.5, z: 90}
+  m_LocalScale: {x: 298.05, y: 50, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -4842,8 +4842,8 @@ Transform:
   m_GameObject: {fileID: 1344598527}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: -102.5, y: -55.5, z: 90}
-  m_LocalScale: {x: 298.05, y: 1, z: 1}
+  m_LocalPosition: {x: -123.3, y: -55.5, z: 90}
+  m_LocalScale: {x: 298.05, y: 50, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -5391,7 +5391,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TeethManager
   teethOccurenceRate: 0.2
-  timeToRotten: 10
+  timeToRotten: 7
+  timeToDisco: 15
+  timeToPortal: 14
   goldenTeethProbability: 0.06
   overdriveTeethProbability: 0.78
   portalTeethProbability: 0.05
@@ -5870,8 +5872,8 @@ Transform:
   m_GameObject: {fileID: 1615021843}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.6702, y: -55.5, z: 90}
-  m_LocalScale: {x: 298.05, y: 1, z: 1}
+  m_LocalPosition: {x: 8.6702, y: -79.5, z: 90}
+  m_LocalScale: {x: 298.05, y: 50, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

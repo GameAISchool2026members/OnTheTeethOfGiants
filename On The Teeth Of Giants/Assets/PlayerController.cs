@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     public float moveSpeed = 10f;
 
-    float startMoveSpeed;
+    public float startMoveSpeed;
     
 
     void Start()

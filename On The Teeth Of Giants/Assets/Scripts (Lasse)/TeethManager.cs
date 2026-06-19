@@ -18,6 +18,8 @@ public class TeethManager : MonoBehaviour
 
     [Header("Timers")]
     public int timeToRotten = 10;
+    public int timeToDisco = 10;
+    public int timeToPortal = 10;
 
     [Range(0f, 1f)]
     public float goldenTeethProbability = 0.1f;
@@ -108,7 +110,7 @@ public class TeethManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(timeToRotten);
+            yield return new WaitForSeconds(timeToDisco);
 
             List<GameObject> validTeeth = teeth.Where(t => { ToothScript script = t.GetComponent<ToothScript>(); return script != null && script.isWhite; }).ToList();
 
@@ -133,7 +135,7 @@ public class TeethManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(timeToRotten);
+            yield return new WaitForSeconds(timeToPortal);
 
             List<GameObject> validTeeth = teeth.Where(t => { ToothScript script = t.GetComponent<ToothScript>(); return script != null && script.isWhite; }).ToList();
 
@@ -262,6 +264,7 @@ public class TeethManager : MonoBehaviour
         beam1.SetActive(true);
         beam2.SetActive(true);
         overdriveActive = true;
+        //float newMoveSpeed = Mathf.Clamp(overdriveMultiplier * player.moveSpeed, player.startMoveSpeed, overdriveMultiplier);
         player.moveSpeed *= overdriveMultiplier;
         StartCoroutine(Overdrive());
     }
