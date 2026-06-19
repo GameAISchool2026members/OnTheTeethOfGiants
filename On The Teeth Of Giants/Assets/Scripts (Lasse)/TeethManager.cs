@@ -16,7 +16,7 @@ public class TeethManager : MonoBehaviour
     [Range(0f, 1f)]
     public float teethOccurenceRate = 0.5f;
 
-    [Range(5f, 20f)]
+    [Header("Timers")]
     public int timeToRotten = 10;
 
     [Range(0f, 1f)]
