@@ -2818,7 +2818,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1072149783760745063, guid: 17ffb2f69e388f8458d1fff76086123c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 6.6
+      value: 37.6
       objectReference: {fileID: 0}
     - target: {fileID: 1072149783760745063, guid: 17ffb2f69e388f8458d1fff76086123c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3228,7 +3228,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c1ce08a11501624aa9b1939796a3906, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  text: {fileID: 0}
 --- !u!4 &1002080705
 Transform:
   m_ObjectHideFlags: 0
@@ -4682,7 +4681,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a80c0aa539aa93949a2b3c2d84258bac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TeethManager
-  teethOccurenceRate: 0.01
+  teethOccurenceRate: 0.2
+  timeToRotten: 10
+  goldenTeethProbability: 0.1
 --- !u!4 &1460947513
 Transform:
   m_ObjectHideFlags: 0
@@ -5056,6 +5057,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1536740637535818191, guid: 1c841792a0ba4174a9df0b2890f4c687, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8875359228849397298, guid: 1c841792a0ba4174a9df0b2890f4c687, type: 3}
+      propertyPath: isWhite
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -6365,13 +6370,13 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 565461556}
   - {fileID: 1460947513}
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
   - {fileID: 1398730344}
   - {fileID: 1411590100}
-  - {fileID: 565461556}
   - {fileID: 2054762812}
   - {fileID: 911334469}
   - {fileID: 1350309472}
