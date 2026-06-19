@@ -88,10 +88,12 @@ public class ToothScript : MonoBehaviour
             else if (isGold)
             {
                 LootBox();
+                White();
             }
             else if (isOverdrive)
             {
-                TeethManager.EnableOverdrive(); 
+                TeethManager.EnableOverdrive();
+                White();
             }
             else if (isPortal)
             {
