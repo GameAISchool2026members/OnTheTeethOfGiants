@@ -28,7 +28,7 @@ import mediapipe as mp
 from tongue_dino import TongueDinoTracker, classify_direction
 
 MODEL_PATH = "face_landmarker.task"
-CAM_INDEX  = 0
+CAM_INDEX  = 1
 PROTO_PATH = "tongue_proto.npz"
 
 # Smaller grid = faster + coarser. Try 6 (84px) for speed, 10/12 for finer masks.

@@ -23,7 +23,7 @@ from tongue_kalman import TongueKalman
 
 # ---- Config ----
 MODEL_PATH = "face_landmarker.task"
-CAM_INDEX  = 0
+CAM_INDEX  = 1
 
 # ---- Face Landmarker setup (Tasks API, VIDEO mode) ----
 BaseOptions           = mp.tasks.BaseOptions

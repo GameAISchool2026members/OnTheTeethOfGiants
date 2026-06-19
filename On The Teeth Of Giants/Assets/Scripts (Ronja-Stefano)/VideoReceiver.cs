@@ -15,7 +15,13 @@ public class VideoReceiver : MonoBehaviour
     public int port = 5006;                 // must match VideoServer port
 
     [Header("Display")]
-    public RawImage target;                 // a UI RawImage to draw the feed onto
+    public RawImage target; 
+    public SpriteRenderer target2; 
+    
+    public float number1 = 1;
+    public float number2 = 1;
+    public float number3 = 1;
+    public float number4 = 1;               // a UI RawImage to draw the feed onto
 
     TcpClient _client;
     NetworkStream _stream;
@@ -82,7 +88,14 @@ public class VideoReceiver : MonoBehaviour
         {
             _tex.LoadImage(jpeg);           // decode JPEG (main thread only)
             target.texture = _tex;
+            RenderSprite(_tex);
         }
+    }
+
+    public void RenderSprite(Texture2D tex)
+    {
+        Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width * number1, tex.height * number2), new Vector2(0.5f * number3, 0.5f * number3));
+        target2.sprite = sprite;
     }
 
     void OnDisable()        { Shutdown(); }
