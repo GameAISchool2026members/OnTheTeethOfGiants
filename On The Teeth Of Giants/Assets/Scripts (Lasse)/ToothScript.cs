@@ -15,9 +15,15 @@ public class ToothScript : MonoBehaviour
     public int timeUntilDecayStarts = 2;
 
     public bool isWhite;
+    public Sprite WhiteTooth;
     public bool isYellow;
+    public Sprite YellowTooth;
     public bool isBlack;
+    public Sprite BlackTooth;
     public bool isGold;
+    public Sprite GoldTooth;
+    public bool isOverdrive;
+    public Sprite OverdriveTooth;
 
     public Material gold;
 
@@ -41,12 +47,17 @@ public class ToothScript : MonoBehaviour
 
     public void Clean()
     {
-        if (isYellow)
+        /*if (isYellow)
         {
             Debug.Log("Cleaned tooth: " + gameObject.name);
             White();
             // Assuming TeethManager handles this event statically
             TeethManager.onToothCleaned.Invoke(); 
+        }*/
+        if (isYellow)
+        {
+            // Black Already Works
+            White();
         }
     }
 
@@ -69,26 +80,34 @@ public class ToothScript : MonoBehaviour
             }
             else if (isGold)
             {
-                LootBox();
+                Gold();
+            }
+            else if (isOverdrive)
+            {
+                Overdrive();
             }
         }
     }
 
     public void Yellow()
     {
-        EvaluateColor(1f);
+        //EvaluateColor(1f);
         isYellow = true;
         isWhite = false;
         isBlack = false;
+        GetComponent<SpriteRenderer>().sprite = YellowTooth;
     }
 
     public void White()
     {
-        EvaluateColor(0f);
+        //EvaluateColor(0f);
+
         isWhite = true;
         isYellow = false;
         isBlack = false;
         isDecaying = false;
+        GetComponent<SpriteRenderer>().sprite = WhiteTooth;
+
     }
 
     public void Black()
@@ -97,7 +116,8 @@ public class ToothScript : MonoBehaviour
         isYellow = false;
         isWhite = false;
         isDecaying = false;
-        GetComponent<SpriteRenderer>().color = Color.black;
+        //GetComponent<SpriteRenderer>().color = Color.black;
+        GetComponent<SpriteRenderer>().sprite = BlackTooth;
 
         foreach (var n in neighborTeeth)
         {
@@ -113,8 +133,21 @@ public class ToothScript : MonoBehaviour
         isBlack = false;
         isYellow = false;
         isWhite = false;
-        GetComponent<SpriteRenderer>().material = gold;
+        GetComponent<SpriteRenderer>().sprite = GoldTooth;
     }
+
+    public void Overdrive()
+    {
+        isOverdrive = true;
+        isWhite = false;
+        isYellow = false;
+        isBlack = false;
+        isDecaying = false;
+        GetComponent<SpriteRenderer>().sprite = OverdriveTooth;
+
+    }
+
+
 
     public void StartDecay()
     {

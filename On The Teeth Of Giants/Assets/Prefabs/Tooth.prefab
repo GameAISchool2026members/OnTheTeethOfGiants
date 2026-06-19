@@ -29,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -3.6, y: -13.3, z: 90}
-  m_LocalScale: {x: 10, y: 10, z: 10}
+  m_LocalScale: {x: 3.5, y: 3.5, z: 3.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -140,9 +140,15 @@ MonoBehaviour:
   toothDecayTime: 5
   timeUntilDecayStarts: 2
   isWhite: 0
+  WhiteTooth: {fileID: 21300000, guid: f3185dcdf04a0264fb6f5682a40c16f0, type: 3}
   isYellow: 0
+  YellowTooth: {fileID: 21300000, guid: 56152a49bae7fd947a9f9a12619ac553, type: 3}
   isBlack: 0
+  BlackTooth: {fileID: 21300000, guid: 3ab3309baa6b06b41bc47138c6433b8b, type: 3}
   isGold: 0
+  GoldTooth: {fileID: 21300000, guid: 59d47c988361cbf429e335971517df77, type: 3}
+  isOverdrive: 0
+  OverdriveTooth: {fileID: 21300000, guid: 6b3c641cd2a3386409dae1d1c20f9b20, type: 3}
   gold: {fileID: 2100000, guid: e05ca6eee40ed9044815fc352dd2b2e6, type: 2}
 --- !u!61 &7269518237445050565
 BoxCollider2D:

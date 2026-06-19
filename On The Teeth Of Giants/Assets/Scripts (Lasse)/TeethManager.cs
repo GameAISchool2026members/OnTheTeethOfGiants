@@ -20,6 +20,7 @@ public class TeethManager : MonoBehaviour
 
     [Range(0f, 1f)]
     public float goldenTeethProbability = 0.1f;
+    public float overdriveTeethProbaility = 0.1f;
 
     [SerializeField] float overdriveMultiplier;
 
@@ -87,10 +88,12 @@ public class TeethManager : MonoBehaviour
                 {
                     targetTooth.Gold();
                 }
-                else
+
+                if (OverdriveTooth())
                 {
-                    targetTooth.Black();
+                    targetTooth.Overdrive();
                 }
+                targetTooth.Black();
             }
             else
             {
@@ -102,6 +105,16 @@ public class TeethManager : MonoBehaviour
     public bool GoldTooth()
     {
         return false; // Not implemented as of now
+        int randomNumber = Random.Range(0, 1);
+        if (randomNumber < goldenTeethProbability)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public bool OverdriveTooth()
+    {
         int randomNumber = Random.Range(0, 1);
         if (randomNumber < goldenTeethProbability)
         {
