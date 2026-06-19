@@ -77,6 +77,7 @@ public class ToothScript : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Player"))
         {
+            TeethManager.OnCleaned();
             if (isYellow)
             {
                 Clean();

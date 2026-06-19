@@ -43,6 +43,10 @@ public class TeethManager : MonoBehaviour
 
     public List<GameObject> currentPortalTeeth = new List<GameObject>();
 
+    public AudioSource audioPlayer;
+
+    public AudioClip clip1;
+
     void Start()
     {
         teeth = new List<GameObject>(GameObject.FindGameObjectsWithTag("Tooth"));
@@ -56,6 +60,8 @@ public class TeethManager : MonoBehaviour
         StartCoroutine(GoldTeeth());
         StartCoroutine(PortalTeeth());
         StartCoroutine(OverdriveTeeth());
+
+        audioPlayer = GetComponent<AudioSource>();
     }
 
     void OnDestroy()
@@ -73,12 +79,12 @@ public class TeethManager : MonoBehaviour
             float randomValue = Random.Range(0f, 1f);
             if (randomValue < teethOccurenceRate)
             {
-                Debug.Log($"Tooth {tooth.name} is affected (random value: {randomValue})");
+                //Debug.Log($"Tooth {tooth.name} is affected (random value: {randomValue})");
                 script.Yellow();
             }
             else
             {
-                Debug.Log($"Tooth {tooth.name} is healthy (random value: {randomValue})");
+                //Debug.Log($"Tooth {tooth.name} is healthy (random value: {randomValue})");
                 script.White();
             }
         }
@@ -212,9 +218,7 @@ public class TeethManager : MonoBehaviour
         };
 
     }
-
-   
-
+    
     public bool GoldTooth()
     {
         return false; // Not implemented as of now
@@ -248,6 +252,9 @@ public class TeethManager : MonoBehaviour
 
     public void OnCleaned()
     {
+        audioPlayer.PlayOneShot(clip1);
+        Debug.Log("Playing audio");
+
         if (teeth.Any(x => {ToothScript script = x.GetComponent<ToothScript>(); return script != null && script.isYellow;}))
         {
             Debug.Log("Not all teeth are clean yet.");
