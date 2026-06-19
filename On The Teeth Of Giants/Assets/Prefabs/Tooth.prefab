@@ -137,6 +137,13 @@ MonoBehaviour:
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
   colorValue: 0
+  toothDecayTime: 5
+  timeUntilDecayStarts: 2
+  isWhite: 0
+  isYellow: 0
+  isBlack: 0
+  isGold: 0
+  gold: {fileID: 2100000, guid: e05ca6eee40ed9044815fc352dd2b2e6, type: 2}
 --- !u!61 &7269518237445050565
 BoxCollider2D:
   m_ObjectHideFlags: 0
