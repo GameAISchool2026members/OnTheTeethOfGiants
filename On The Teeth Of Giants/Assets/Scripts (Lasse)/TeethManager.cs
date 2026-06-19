@@ -87,6 +87,7 @@ public class TeethManager : MonoBehaviour
 
     public bool GoldTooth()
     {
+        return false; // Not implemented as of now
         int randomNumber = Random.Range(0, 1);
         if (randomNumber < goldenTeethProbability)
         {
