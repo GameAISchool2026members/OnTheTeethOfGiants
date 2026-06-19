@@ -41,10 +41,19 @@ CROP = "face"     # "mouth" →  just the mouth region (tight; easiest for dino)
 MODEL_PATH        = "face_landmarker.task"
 SEG_MODEL_PATH    = "selfie_multiclass_256x256.tflite"
 CAM_INDEX         = 0
+PROC_WIDTH        = 640             # cap processing resolution. High-res webcams
+                                    # are downscaled to this width so the dino
+                                    # tracker sees the same scale on any camera.
+                                    # Set to 0 to use the camera's native size.
 UNITY_HOST        = "127.0.0.1"
 UNITY_PORT        = 5005
 SHOW_WINDOW       = True            # annotated webcam frame
 SHOW_STREAM       = True            # what Unity actually receives
+MIRROR_STREAM     = True            # flip the crop horizontally before sending to
+                                    # Unity. The detection frame is already mirrored
+                                    # (selfie view); this flips the STREAM back to
+                                    # the true camera orientation, independently, so
+                                    # detection / dx signs are untouched.
 FACE_PAD          = 0.25            # padding around face crop (fraction of box)
 MOUTH_PAD         = 0.15            # sideways padding around mouth crop
 REMOVE_BACKGROUND = False           # OFF: heavy on CPU. True keeps only the head.
@@ -111,7 +120,18 @@ def main():
     cap = cv2.VideoCapture(CAM_INDEX)
     if not cap.isOpened():
         raise RuntimeError(f"Could not open webcam (index {CAM_INDEX}).")
-    print(f"Webcam opened. Streaming to {UNITY_HOST}:{UNITY_PORT}. "
+
+    # Ask the driver for a smaller frame (saves bandwidth). Cameras snap to the
+    # nearest supported mode, so the per-frame downscale below still enforces
+    # PROC_WIDTH exactly — this is just a hint.
+    if PROC_WIDTH:
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, PROC_WIDTH)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(PROC_WIDTH * 3 / 4))
+    cam_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    cam_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    print(f"Camera delivers {cam_w}x{cam_h}; "
+          f"processing at width {PROC_WIDTH or cam_w}.")
+    print(f"Streaming to {UNITY_HOST}:{UNITY_PORT}. "
           f"Tongue out + 'c' to calibrate. Esc to quit.")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -134,6 +154,10 @@ def main():
             ok, frame = cap.read()
             if not ok:
                 break
+            if PROC_WIDTH and frame.shape[1] > PROC_WIDTH:   # normalize resolution
+                h, w = frame.shape[:2]
+                frame = cv2.resize(frame, (PROC_WIDTH, int(h * PROC_WIDTH / w)),
+                                   interpolation=cv2.INTER_AREA)
             frame = cv2.flip(frame, 1)     # mirror -> feels natural
 
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -161,6 +185,8 @@ def main():
 
             # ---- TCP video: stream the chosen crop (mouth by default) ----
             stream_frame = stream_crop(frame, result, segmenter)
+            if MIRROR_STREAM:
+                stream_frame = cv2.flip(stream_frame, 1)   # orient for Unity only
             video.send(stream_frame)
 
             # ---- debug window 1: full annotated frame ----
