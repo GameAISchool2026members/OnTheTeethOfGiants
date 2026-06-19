@@ -30,6 +30,12 @@ class VideoServer:
         threading.Thread(target=self._accept_loop, daemon=True).start()
         print(f"Video server listening on TCP {host}:{port}")
 
+    @property
+    def connected(self):
+        """True when a Unity client is currently connected."""
+        with self._lock:
+            return self._client is not None
+
     def _accept_loop(self):
         while self._running:
             try:
@@ -44,19 +50,37 @@ class VideoServer:
             except OSError:
                 break
 
-    def send(self, frame):
-        with self._lock:
-            conn = self._client
-        if conn is None:
-            return
-
+    def _resize(self, frame):
         h, w = frame.shape[:2]
         if w != self.width:                            # downscale, keep aspect
             frame = cv2.resize(frame, (self.width, int(h * self.width / w)))
+        return frame
+
+    def frame_for_stream(self, frame, jpeg=True):
+        """Return the exact image Unity receives for *frame*: resized, and
+        (when jpeg=True) round-tripped through the same JPEG compression so
+        the artifacts are visible. Intended for a local debug preview."""
+        frame = self._resize(frame)
+        if jpeg:
+            ok, buf = cv2.imencode(".jpg", frame,
+                                   [cv2.IMWRITE_JPEG_QUALITY, self.quality])
+            if ok:
+                frame = cv2.imdecode(buf, cv2.IMREAD_COLOR)
+        return frame
+
+    def send(self, frame):
+        """Encode and send *frame* to the connected client.
+        Returns True if bytes were sent, False otherwise (no client / error)."""
+        with self._lock:
+            conn = self._client
+        if conn is None:
+            return False
+
+        frame = self._resize(frame)
         ok, buf = cv2.imencode(".jpg", frame,
                                [cv2.IMWRITE_JPEG_QUALITY, self.quality])
         if not ok:
-            return
+            return False
         data = buf.tobytes()
         try:
             conn.sendall(struct.pack(">I", len(data)) + data)
@@ -64,6 +88,8 @@ class VideoServer:
             with self._lock:
                 if self._client is conn:
                     self._client = None
+            return False
+        return True
 
     def close(self):
         self._running = False
