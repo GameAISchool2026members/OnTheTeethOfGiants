@@ -37,10 +37,10 @@ public class PlayerController : MonoBehaviour
                 move = Vector3.down;
                 break;
             case "left":
-                move = Vector3.left;
+                move = Vector3.right;
                 break;
             case "right":
-                move = Vector3.right;
+                move = Vector3.left;
                 break;
             case "closed":
                 // no input, stay still

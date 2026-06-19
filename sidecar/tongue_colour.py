@@ -176,38 +176,3 @@ def classify_direction(dx, dy, conf):
     if abs(dx) >= abs(dy):
         return "right" if dx > 0 else "left"
     return "down" if dy > 0 else "up"
-
-
-def mouth_crop(frame, lms, pad=0.15):
-    """Crop *frame* to the mouth region — for streaming to the dino game.
-
-    Spans the outer-lip box widened by *pad* on the sides, extended DOWN past
-    the lower lip (where the tongue droops) and UP toward the nose, capped just
-    below the nostrils with the same nose buffer the detector uses. The crop
-    therefore covers the full range the tongue can reach, up or down.
-
-    Returns a numpy view; falls back to the full frame if the box is degenerate.
-    NOTE: this is purely what the dino side *receives* — landmarks/detection run
-    on the full frame, so cropping never changes detection accuracy here.
-    """
-    h, w = frame.shape[:2]
-    outer = np.array([[lms[i].x * w, lms[i].y * h] for i in OUTER_LIP])
-    x0, y0 = outer.min(0)
-    x1, y1 = outer.max(0)
-    bw, bh = x1 - x0, y1 - y0
-    if bw < 2 or bh < 2:                       # degenerate / no mouth
-        return frame
-
-    cx0 = x0 - pad * bw                        # sideways padding
-    cx1 = x1 + pad * bw
-    cy1 = y1 + 0.70 * bh                       # down toward the chin
-    cy0 = y0 - 0.70 * bh                       # up toward the nose...
-    nose_floor = max(lms[i].y * h for i in NOSE_BOTTOM)
-    if nose_floor < y0:                        # ...capped below the nostrils
-        cy0 = max(cy0, nose_floor + 0.30 * (y0 - nose_floor))
-
-    px0, px1 = int(max(0, cx0)), int(min(w, cx1))
-    py0, py1 = int(max(0, cy0)), int(min(h, cy1))
-    if px1 <= px0 or py1 <= py0:
-        return frame
-    return frame[py0:py1, px0:px1]

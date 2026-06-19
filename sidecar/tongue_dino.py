@@ -81,21 +81,13 @@ class DinoFeatures:
 
 
 class TongueDinoTracker:
-    def __init__(self, features=None, margin=0.28, min_area=120,
-                 model_name="dinov2_vits14_reg", grid=8, threads=None,
-                 reach=(0.6, 1.0, 1.8), v_gain=2.0):
+    def __init__(self, features=None, margin=0.04, min_area=150,
+                 model_name="dinov2_vits14_reg", grid=8, threads=None):
         self.fx = features or DinoFeatures(model_name=model_name,
                                            grid=grid, threads=threads)
         self.grid = self.fx.grid
         self.margin = margin            # cos(tongue) - cos(bg) needed to fire
         self.min_area = min_area
-        # How far past the mouth box the tongue may reach, as fractions of mouth
-        # width/height: (sideways, up, down). The envelope both crops what DINO
-        # sees and gates the final mask, so a side/up/down tongue must fit inside
-        # it. Up reaches toward the nose; it is capped below the nostrils in
-        # _geometry so the nostrils never enter the search region.
-        self.reach_x, self.reach_up, self.reach_dn = reach
-        self.v_gain = float(v_gain)     # how hard crossing a lip pushes up/down
         self.ox = self.oy = 0.0
         self._k = np.ones((3, 3), np.uint8)
         # prototype accumulators (sums + counts -> running means)
@@ -123,38 +115,29 @@ class TongueDinoTracker:
         lip_cut = cv2.dilate(lip_band, self._k, iterations=3)
 
         x, y, bw, bh = cv2.boundingRect(outer)
-        # Generous envelope around the mouth: the tongue may protrude in any
-        # direction, sometimes a long way. This both bounds the DINO crop and
-        # gates the final mask, so it MUST contain a fully-extended tongue --
-        # including the extreme up/down poses. We deliberately do NOT cap the
-        # upward reach at the nose: unlike the colour tracker, the tongue-vs-
-        # background prototype score rejects nostrils/skin on its own, so a nose
-        # cap would only clip an extreme up-tongue reaching toward the nose.
-        mx = int(self.reach_x * bw)
-        dn = int(self.reach_dn * bh)
-        ex0, ey0 = x - mx, y - int(self.reach_up * bh)
-        ex1, ey1 = x + bw + mx, y + bh + dn
-        env = np.array([[ex0, ey0], [ex1, ey0], [ex1, ey1], [ex0, ey1]],
-                       dtype=np.int32)
+        ext = np.array([
+            [x - int(0.10 * bw), y + bh - int(0.10 * bh)],
+            [x + bw + int(0.10 * bw), y + bh - int(0.10 * bh)],
+            [x + bw + int(0.10 * bw), y + bh + int(0.70 * bh)],
+            [x - int(0.10 * bw), y + bh + int(0.70 * bh)],
+        ], dtype=np.int32)
 
-        # Search region = the envelope. NOTE: we deliberately do NOT subtract the
-        # lip band here (unlike the colour tracker). A side/up/down tongue lies on
-        # top of the lip, so cutting the lips out would clip it; the tongue-vs-bg
-        # prototype score is what keeps lips/skin from firing.
-        search = np.zeros((h, w), np.uint8)
-        cv2.fillPoly(search, [env], 255)
+        search = opening.copy()
+        cv2.fillPoly(search, [ext], 255)
+        search = cv2.bitwise_and(search, cv2.bitwise_not(lip_cut))
 
         cx, cy = inner.mean(0)
-        x0 = max(0, ex0)
-        y0 = max(0, ey0)
-        x1 = min(w, ex1)
-        y1 = min(h, ey1)
+        box = cv2.boundingRect(np.vstack([outer, ext]))     # x, y, w, h
+        bx, by, bwid, bhei = box
+        pad = int(0.08 * max(bwid, bhei))
+        x0 = max(0, bx - pad)
+        y0 = max(0, by - pad)
+        x1 = min(w, bx + bwid + pad)
+        y1 = min(h, by + bhei + pad)
         return {
             "opening": opening, "lip_cut": lip_cut, "outer_mask": outer_mask,
             "search": search, "box": (x0, y0, x1, y1),
             "mcx": float(cx), "mcy": float(cy), "bw": bw, "bh": bh,
-            "inner_top": float(inner[:, 1].min()),   # upper inner-lip line
-            "inner_bot": float(inner[:, 1].max()),   # lower inner-lip line
         }
 
     def _patch_centres(self, box):
@@ -188,21 +171,6 @@ class TongueDinoTracker:
         feat = self.fx.extract(crop)                      # (g, g, C)
         centres = self._patch_centres(g["box"])
         is_tongue = self._sample(g["opening"], centres)
-
-        # Bootstrap for EXTREME poses: once a tongue prototype exists, also count
-        # patches anywhere in the envelope that already look like tongue. In an
-        # extreme up/down pose the tongue has left the inner-lip opening, so the
-        # opening alone labels nothing -- this lets you hold the pose, press the
-        # enroll key, and grow the prototype to cover it. (These patches are also
-        # excluded from background below via `& ~is_tongue`.)
-        pt, pb = self._protos()
-        if pt is not None:
-            sc = feat @ pt
-            if pb is not None:
-                sc = sc - feat @ pb
-            in_env = self._sample(g["search"], centres)
-            is_tongue = is_tongue | (in_env & (sc > self.margin))
-
         is_bg = self._sample(g["lip_cut"], centres) | ~self._sample(g["outer_mask"], centres)
 
         t = feat[is_tongue]
@@ -265,36 +233,19 @@ class TongueDinoTracker:
         n, labels, stats, cents = cv2.connectedComponentsWithStats(full)
         if n <= 1:
             return None
-        # Keep EVERY sizeable blob, not just the biggest. When the tongue goes up
-        # the tip (over the upper lip) can separate from the in-mouth base after
-        # morphology; taking only the largest blob throws the tip away and the
-        # lone base reads as "down". Union all blobs above a small floor.
-        keep_min = max(self.min_area // 4, 40)
-        keep = [i for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] >= keep_min]
-        if not keep:                                   # fall back to the largest
-            keep = [1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))]
-        area = int(sum(stats[i, cv2.CC_STAT_AREA] for i in keep))
+        idx = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+        area = int(stats[idx, cv2.CC_STAT_AREA])
         if area < self.min_area:
             return None
 
-        clean = np.where(np.isin(labels, keep), 255, 0).astype(np.uint8)
-
-        ys, xs = np.where(clean > 0)
-        tx, ty = float(xs.mean()), float(ys.mean())
-
-        # How much of the tongue sticks out ABOVE the upper lip / BELOW the lower
-        # lip. "Tongue over the upper lip" -> strong up, even when the in-mouth
-        # base would otherwise pull the centroid back down.
-        up_frac = float(np.mean(ys < g["inner_top"]))
-        dn_frac = float(np.mean(ys > g["inner_bot"]))
-
+        tx, ty = cents[idx]
         scale = g["bw"] * 0.5 + 1e-6
         dx = (tx - g["mcx"]) / scale
         dy = (ty - g["mcy"]) / scale
-        dy += self.v_gain * (dn_frac - up_frac)        # bias toward the lip crossed
-        dy = float(np.clip(dy, -2.0, 2.0))             # keep analog range sane
-
         conf = min(1.0, area / (g["bw"] * g["bh"] + 1e-6))
+
+        clean = np.zeros_like(full)
+        clean[labels == idx] = 255
         return float(dx), float(dy), float(conf), clean
 
     def recenter(self, frame, lms):
