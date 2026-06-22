@@ -7,6 +7,20 @@ Built at **[8th International Summer School for Artificial Intelligence and Game
 
 ---
 
+## Showcase
+
+https://github.com/user-attachments/assets/8e38b8eb-d374-43f2-984a-cb6e8eb68346
+
+
+
+https://github.com/user-attachments/assets/d16127f7-2996-4dc0-b4e9-79b77dfedc7e
+
+---
+
+
+
+
+
 ## How it works
 
 The project is split into two processes that talk over local sockets:
