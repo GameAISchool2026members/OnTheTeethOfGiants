@@ -177,4 +177,15 @@ The DINO tester saves/loads prototypes from `tongue_proto.npz`, so once you've e
 
 ---
 
+## Teammates
+- Anton Valkenberg 
+- Guillermo Hijano
+- Lasse Smidsgaard Andersen
+- Nicholas Rackwitz
+- Ronja Fuchs
+- Ryan Smith
+- Stefano Max
+
+---
+
 *[8th International Summer School for Artificial Intelligence and Games | Leiden, The Netherlands, June 2026](https://school.gameaibook.org/)*
