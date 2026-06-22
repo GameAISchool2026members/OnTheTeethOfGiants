@@ -1,3 +1,4 @@
+<img width="500" height="500" alt="on_the_teeth_of_giants" src="https://github.com/user-attachments/assets/edcda90d-fbe1-4bd5-8104-1c366e0487b3" />
 # On The Teeth Of Giants
 
 A Unity game you play **with your tongue**. A CPU-only Python sidecar watches you through your webcam, figures out which way your tongue is pointing (up / down / left / right / out / no tongue), and streams that to Unity in real time. No GPU required.
