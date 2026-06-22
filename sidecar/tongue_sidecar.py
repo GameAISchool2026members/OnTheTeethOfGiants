@@ -20,11 +20,22 @@ from tongue_dino import TongueDinoTracker as TongueTracker # remove this for non
 # tracker = TongueTracker()  # constructs the DINO version
 # ... bind 'e' -> tracker.enroll(frame, lms)
 
-MODEL_PATH  = "face_landmarker.task"
-CAM_INDEX   = 0
-UNITY_HOST  = "127.0.0.1"
-UNITY_PORT  = 5005
-SHOW_WINDOW = True          # set False to run headless (no re-center key then)
+# ── Swap tracker backend here ──────────────────────────────────────────────────
+TRACKER = "dino"   # "colour"  →  redness threshold (fast, CPU, no extra deps)
+                   # "dino"    →  DINOv2 feature tracker (more robust)
+# ──────────────────────────────────────────────────────────────────────────────
+TongueTracker = {"colour": _ColourTracker, "dino": _DinoTracker}[TRACKER]
+
+MODEL_PATH        = "face_landmarker.task"
+SEG_MODEL_PATH    = "selfie_multiclass_256x256.tflite"
+CAM_INDEX         = 0
+UNITY_HOST        = "127.0.0.1"
+UNITY_PORT        = 5005
+SHOW_WINDOW       = True            # annotated webcam frame
+SHOW_STREAM       = True            # what Unity actually receives
+FACE_PAD          = 0.25            # padding around face crop (fraction of box)
+REMOVE_BACKGROUND = True           # OFF: heavy on CPU. True keeps only the head.
+BG_COLOR          = (0, 0, 0)       # BGR fill for removed background (if enabled)
 
 BaseOptions           = mp.tasks.BaseOptions
 FaceLandmarker        = mp.tasks.vision.FaceLandmarker
@@ -124,6 +135,14 @@ def main():
                 # close with esc key
                 elif key == 27:
                     break
+                elif key == ord("c") and result.face_landmarks:  # calibrate
+                    tracker.recenter(frame, result.face_landmarks[0])
+                elif key == ord("e"):
+                    tracker.enroll(frame, result.face_landmarks[0])  # Dino tracker only; no-op for colour
+                elif key == ord("l"):
+                    tracker.load()
+                elif key == ord("s"):
+                    tracker.save()
 
     video.close()
     sock.close()
